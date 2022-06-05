@@ -5,6 +5,7 @@ from rest_framework import viewsets, filters
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+from rest_framework.permissions import IsAuthenticated#IsAuthenticatedOrReadOnly
 
 from profiles_api import serializers, models, permissions
 
@@ -70,4 +71,14 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 class UserLoginApiView(ObtainAuthToken):
     """Handle user authentication"""
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
-    
+
+class UserProfileFeedViewSet(viewsets.ModelViewSet):
+    """CRUD feed items"""
+    authentication_classes = (TokenAuthentication,)
+    serializer_class = serializers.ProfilesFeedItemSerializer
+    queryset = models.ProfileFeedItem.objects.all()
+    permission_classes = (permissions.UpdateOwnStatus, IsAuthenticated)
+        
+    def perform_create(self, serializer):
+        """Method which triggered for POST, and sets looged in user to feed"""
+        serializer.save(user_profile=self.request.user)
